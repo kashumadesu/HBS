@@ -1,0 +1,236 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");
+#else
+    printf("\033c"); 
+#endif
+}
+
+struct user {
+    char username[50];
+    char password[50];
+};
+
+struct booking {
+    int roomNumber;
+    char guestName[50];
+    int isBooked;
+    int isCheckedIn;
+};
+
+void displayMenu() {
+    printf("\n\nPress 1 to register");
+    printf("\nPress 2 to log in");
+    printf("\nPress 3 to view available rooms");
+    printf("\nPress 4 to make a booking");
+    printf("\nPress 5 to view your bookings");
+    printf("\nPress 6 to check in");
+    printf("\nPress 7 to check out");
+    printf("\nPress 8 to log out");
+    printf("\nPress 9 to exit");
+    printf("\n\nYour choice:\t");
+}
+
+void updateAvailableRooms(struct booking rooms[], int numRooms) {
+    printf("\nAvailable Rooms:\n");
+    for (int i = 0; i < numRooms; ++i) {
+        if (!rooms[i].isBooked) {
+            printf("Room %d: ", rooms[i].roomNumber);
+            switch (rooms[i].roomNumber) {
+                case 1 ... 5:
+                    printf("Single Room - Comfortable single bed\n");
+                    break;
+                case 6 ... 10:
+                    printf("Studio Room - Spacious room with a kitchenette\n");
+                    break;
+                case 11 ... 12:
+                    printf("Deluxe Room - Luxurious room with extra amenities\n");
+                    break;
+                case 13 ... 14:
+                    printf("Room with a View - Stunning view of the surroundings\n");
+                    break;
+                case 15:
+                    printf("Suite - Elegant suite with separate living area\n");
+                    break;
+            }
+        }
+    }
+}
+
+int main() {
+    struct user users[15]; 
+    struct booking rooms[15]; 
+    int userCount = 0;
+    int currentUserIndex = -1;
+
+    for (int i = 0; i < 15; ++i) {
+        rooms[i].roomNumber = i + 1;
+        rooms[i].isBooked = 0;
+        rooms[i].isCheckedIn = 0;
+    }
+
+    int opt, choice;
+    char cont = 'y';
+
+    do {
+        displayMenu();
+        scanf("%d", &opt);
+
+        switch (opt) {
+        case 1: 
+            clearScreen();
+            printf("\nEnter your username: ");
+            scanf("%s", users[userCount].username);
+            printf("Enter your password: ");
+            scanf("%s", users[userCount].password);
+            userCount++;
+            printf("\nRegistration successful.\n");
+            break;
+
+        case 2: 
+            clearScreen();
+            printf("\nEnter your username: ");
+            char tempUsername[50];
+            char tempPassword[50];
+            scanf("%s", tempUsername);
+
+            int i;
+            for (i = 0; i < userCount; ++i) {
+                if (strcmp(tempUsername, users[i].username) == 0) {
+                    currentUserIndex = i;
+                    printf("Enter your password: ");
+                    scanf("%s", tempPassword);
+
+                    if (strcmp(tempPassword, users[i].password) == 0) {
+                        printf("\nLogin successful. Welcome, %s!\n", users[i].username);
+                        break;
+                    } else {
+                        printf("\nInvalid password. Returning to the main menu.\n");
+                        currentUserIndex = -1;
+                        break;
+                    }
+                }
+            }
+
+            if (i == userCount) {
+                printf("\nUser not found. Returning to the main menu.\n");
+                currentUserIndex = -1;
+            }
+            break;
+
+        case 3:
+            clearScreen();
+            updateAvailableRooms(rooms, 15);
+            break;
+
+        case 4: 
+            clearScreen();
+            if (currentUserIndex != -1) {
+                updateAvailableRooms(rooms, 15);
+
+                printf("Enter the room number you want to book: ");
+                scanf("%d", &choice);
+
+                if (choice >= 1 && choice <= 15 && !rooms[choice - 1].isBooked) {
+                    rooms[choice - 1].roomNumber = choice;
+                    printf("Enter your name for Room %d: ", choice);
+                    scanf("%s", rooms[choice - 1].guestName);
+                    rooms[choice - 1].isBooked = 1;
+                    printf("Booking successful.\n");
+                } else {
+                    printf("Invalid room number or the room is already booked.\n");
+                }
+            } else {
+                printf("\nYou need to log in first to make a booking.\n");
+            }
+            break;
+
+        case 5: 
+            clearScreen();
+            if (currentUserIndex != -1) {
+                printf("\nYour Bookings:\n");
+                for (int i = 0; i < 15; ++i) {
+                    if (rooms[i].isBooked && strcmp(rooms[i].guestName, users[currentUserIndex].username) == 0) {
+                        printf("Room %d: %s\n", rooms[i].roomNumber, rooms[i].guestName);
+                    }
+                }
+            } else {
+                printf("\nYou need to log in first to view your bookings.\n");
+            }
+            break;
+
+        case 6: 
+            clearScreen();
+            if (currentUserIndex != -1) {
+                printf("\nYour Bookings:\n");
+                for (int i = 0; i < 15; ++i) {
+                    if (rooms[i].isBooked && !rooms[i].isCheckedIn && strcmp(rooms[i].guestName, users[currentUserIndex].username) == 0) {
+                        printf("Room %d: %s\n", rooms[i].roomNumber, rooms[i].guestName);
+                    }
+                }
+
+                printf("\nEnter the room number you want to check in: ");
+                scanf("%d", &choice);
+
+                if (choice >= 1 && choice <= 15 && rooms[choice - 1].isBooked && !rooms[choice - 1].isCheckedIn) {
+                    rooms[choice - 1].isCheckedIn = 1;
+                    printf("Check-in successful.\n");
+                } else {
+                    printf("Invalid room number, the room is not booked, or already checked in.\n");
+                }
+            } else {
+                printf("\nYou need to log in first to check in.\n");
+            }
+            break;
+
+        case 7:
+            clearScreen();
+            if (currentUserIndex != -1) {
+                printf("\nYour Checked-in Bookings:\n");
+                for (int i = 0; i < 15; ++i) {
+                    if (rooms[i].isBooked && rooms[i].isCheckedIn && strcmp(rooms[i].guestName, users[currentUserIndex].username) == 0) {
+                        printf("Room %d: %s\n", rooms[i].roomNumber, rooms[i].guestName);
+                    }
+                }
+
+                printf("Enter the room number you want to check out: ");
+                scanf("%d", &choice);
+
+                if (choice >= 1 && choice <= 15 && rooms[choice - 1].isBooked && rooms[choice - 1].isCheckedIn) {
+                    rooms[choice - 1].isCheckedIn = 0;
+                    rooms[choice - 1].isBooked = 0; 
+                    printf("Check-out successful. Room %d is now available.\n", choice);
+                } else {
+                    printf("Invalid room number, the room is not booked, or not checked in.\n");
+                }
+            } else {
+                printf("\nYou need to log in first to check out.\n");
+            }
+            break;
+
+        case 8: 
+            clearScreen();
+            currentUserIndex = -1;
+            printf("\nLogged out successfully.\n");
+            break;
+
+        case 9: 
+            clearScreen();
+            printf("\nExiting the program. Goodbye!\n");
+            exit(0);
+
+        default:
+            clearScreen();
+            printf("\nInvalid option. Please choose again.\n");
+        }
+
+        while ((getchar()) != '\n');
+
+    } while (1);
+
+    return 0;
+}
